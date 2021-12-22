@@ -16,4 +16,8 @@ func (i *Identifier) TokenLiteral() string {
 	return i.Token.Literal
 }
 
-func (i *Identifier) statementNode() {}
+func (i *Identifier) expressionNode() {}
+
+func (i *Identifier) toString() string {
+	return i.Value
+}

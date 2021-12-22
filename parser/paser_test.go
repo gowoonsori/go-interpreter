@@ -1,56 +1,18 @@
 package parser
 
 import (
+	"github.com/stretchr/testify/assert"
 	"monkey/ast"
 	"monkey/lexer"
 	"testing"
 )
 
-func Test_Parser테스트(t *testing.T) {
-	//given
-	input := `
-let x = 5;
-let y = 10;
-let z = 838383;
-`
-	//when
-	l := lexer.NewLexer(input)
-	p := New(l)
-	program := p.ParseProgram()
-
-	//then
-	if program == nil {
-		t.Fatalf("ParseProgram() returned nil")
-	}
-
-	if len(program.Statements) != 3 {
-		t.Fatalf("3개의 구문이 아닙니다. expected : 3, got: %d", len(program.Statements))
-	}
-	checkParserErrors(t, p)
-}
-
-func Test_Parser_실패테스트(t *testing.T) {
-	//given
-	input := `let foo = 8`
-
-	//when
-	l := lexer.NewLexer(input)
-	p := New(l)
-	p.ParseProgram()
-
-	//then
-	if len(p.Errors()) != 1 {
-		t.Fatalf("error가 한개이어야 합니다.")
-	}
-}
-
 func Test_let구문테스트(t *testing.T) {
 	//given
 	input := `
-let x x 5;
-let y = 10;
-let foo = 838383;
-`
+		let x = 5;
+		let y = 10;
+		let foo = 838383;`
 	tests := []struct {
 		expectedIdentifier string
 	}{
@@ -61,19 +23,78 @@ let foo = 838383;
 
 	//when
 	l := lexer.NewLexer(input)
-	p := New(l)
+	p := NewParser(l)
 
 	program := p.ParseProgram()
 
 	//then
+	assert.Equalf(t, 3, len(program.Statements), "3개의 구문이 아닙니다. expected : 3, got: %d", len(program.Statements))
 	checkParserErrors(t, p)
 
 	for i, tk := range tests {
 		stmt := program.Statements[i]
-		if !testLetStatement(t, stmt, tk.expectedIdentifier) {
-			return
+		assert.Equalf(t, "let", stmt.TokenLiteral(), "s.TokenLiteral 이 let이 아닙니다. got=%q ", stmt.TokenLiteral())
+
+		letStmt, ok := stmt.(*ast.LetStatement)
+		assert.Equalf(t, true, ok, "s 가 LetStatemnt가 아닙니다. got=%T", stmt)
+		assert.Equalf(t, tk.expectedIdentifier, letStmt.Name.Value,
+			"name이 %s가 아닙니다. got=%s", tk.expectedIdentifier, letStmt.Name.Value)
+		assert.Equalf(t, tk.expectedIdentifier, letStmt.Name.TokenLiteral(),
+			"token literal이 %s가 아닙니다. got=%s", tk.expectedIdentifier, letStmt.Name.TokenLiteral())
+	}
+}
+
+func Test_return구문테스트(t *testing.T) {
+	//given
+	input := `
+		return 5;
+		return 10;
+		return 993232;`
+
+	//when
+	l := lexer.NewLexer(input)
+	p := NewParser(l)
+	program := p.ParseProgram()
+
+	//then
+	assert.Equalf(t, 3, len(program.Statements),
+		"3개의 구문이 아닙니다. expected : 3, got: %d", len(program.Statements))
+
+	for _, stmt := range program.Statements {
+		returnStmt, ok := stmt.(*ast.ReturnStatement)
+		assert.Equalf(t, true, ok, "Stmt Return구문이 아닙니다. got = %T", stmt)
+		assert.Equalf(t, "return", returnStmt.TokenLiteral(),
+			"Return 구문의 토큰 리터럴이 'return'이 아닙니다. got = %q", returnStmt.TokenLiteral())
+	}
+}
+
+func Test_expression구문테스트(t *testing.T) {
+	//given
+	input := `
+		return 5;
+		return 10;
+		return 993232;`
+
+	//when
+	l := lexer.NewLexer(input)
+	p := NewParser(l)
+	program := p.ParseProgram()
+
+	if len(program.Statements) != 3 {
+		t.Fatalf("3개의 구문이 아닙니다. expected : 3, got: %d", len(program.Statements))
+	}
+
+	for _, stmt := range program.Statements {
+		returnStmt, ok := stmt.(*ast.ReturnStatement)
+		if !ok {
+			t.Errorf("Stmt Return구문이 아닙니다. got = %T", stmt)
+			continue
+		}
+		if returnStmt.TokenLiteral() != "return" {
+			t.Errorf("Return 구문의 토큰 리터럴이 'return'이 아닙니다. got = %q", returnStmt.TokenLiteral())
 		}
 	}
+
 }
 
 func checkParserErrors(t *testing.T, p *Parser) {
@@ -87,28 +108,4 @@ func checkParserErrors(t *testing.T, p *Parser) {
 		t.Errorf("parser error: %q", msg)
 	}
 	t.FailNow()
-}
-
-func testLetStatement(t *testing.T, s ast.Statement, name string) bool {
-	if s.TokenLiteral() != "let" {
-		t.Errorf("s.TokenLiteral 이 let이 아닙니다. got=%q ", s.TokenLiteral())
-		return false
-	}
-
-	letStmt, ok := s.(*ast.LetStatement)
-	if !ok {
-		t.Errorf("s 가 LetStatemnt가 아닙니다. got=%T", s)
-		return false
-	}
-
-	if letStmt.Name.Value != name {
-		t.Errorf("name이 %s가 아닙니다. got=%s", name, letStmt.Name.Value)
-		return false
-	}
-
-	if letStmt.Name.TokenLiteral() != name {
-		t.Errorf("token literal이 %s가 아닙니다. got=%s", name, letStmt.Name.TokenLiteral())
-		return false
-	}
-	return true
 }

@@ -1,9 +1,12 @@
 package ast
 
+import "bytes"
+
 // Node
 //let <identifer> = <expresiion>;
 type Node interface {
 	TokenLiteral() string
+	toString() string
 }
 
 //Program AST의 부모 노드
@@ -17,4 +20,13 @@ func (p *Program) TokenLiteral() string {
 	} else {
 		return ""
 	}
+}
+
+func (p *Program) toString() string {
+	var out bytes.Buffer
+
+	for _, s := range p.Statements {
+		out.WriteString(s.toString())
+	}
+	return out.String()
 }
