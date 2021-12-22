@@ -1,11 +1,13 @@
 package lexer
 
 import (
+	"github.com/stretchr/testify/assert"
 	"monkey/token"
 	"testing"
 )
 
-func Test기본연산자토큰테스트(t *testing.T) {
+func Test_기본연산자토큰테스트(t *testing.T) {
+	//given
 	input := "=+(){},;"
 
 	tests := []struct {
@@ -23,23 +25,22 @@ func Test기본연산자토큰테스트(t *testing.T) {
 		{token.EOF, ""},
 	}
 
+	//when
 	lexer := NewLexer(input)
 
+	//then
 	for i, testToken := range tests {
-		token := lexer.NextToken()
+		tk := lexer.NextToken()
+		assert.Equalf(t, testToken.expectedType, tk.Type,
+			"tests [%d] - tokentype wrong. expected=%q but, got=%q", i, testToken.expectedType, tk.Type)
 
-		if token.Type != testToken.expectedType {
-			t.Fatalf("tests [%d] - tokentype wrong. expected=%q but, got=%q",
-				i, testToken.expectedType, token.Type)
-		}
-		if token.Literal != testToken.expectedLiteral {
-			t.Fatalf("tests [%d] - literal wrong. expected=%q but, got=%q",
-				i, testToken.expectedLiteral, token.Literal)
-		}
+		assert.Equalf(t, testToken.expectedLiteral, tk.Literal,
+			"tests [%d] - literal wrong. expected=%q but, got=%q", i, testToken.expectedLiteral, tk.Literal)
 	}
 }
 
 func Test기본구문테스트(t *testing.T) {
+	//given
 	input := `let five = 5;
 	let ten = 10;
 
@@ -93,23 +94,22 @@ func Test기본구문테스트(t *testing.T) {
 		{token.EOF, ""},
 	}
 
+	//when
 	lexer := NewLexer(input)
 
+	//then
 	for i, testToken := range tests {
-		token := lexer.NextToken()
+		tk := lexer.NextToken()
+		assert.Equalf(t, testToken.expectedType, tk.Type,
+			"tests [%d] - tokentype wrong. expected=%q but, got=%q", i, testToken.expectedType, tk.Type)
 
-		if token.Type != testToken.expectedType {
-			t.Fatalf("tests [%d] - tokentype wrong. expected=%q but, got=%q",
-				i, testToken.expectedType, token.Type)
-		}
-		if token.Literal != testToken.expectedLiteral {
-			t.Fatalf("tests [%d] - literal wrong. expected=%q but, got=%q",
-				i, testToken.expectedLiteral, token.Literal)
-		}
+		assert.Equalf(t, testToken.expectedLiteral, tk.Literal,
+			"tests [%d] - literal wrong. expected=%q but, got=%q", i, testToken.expectedLiteral, tk.Literal)
 	}
 }
 
 func Test_추가연산자들테스트(t *testing.T) {
+	//given
 	input := `
 	!-/*5
 	5 < 10 > 5;
@@ -156,23 +156,23 @@ func Test_추가연산자들테스트(t *testing.T) {
 		{token.EOF, ""},
 	}
 
+	//when
 	lexer := NewLexer(input)
 
+	//then
 	for i, testToken := range tests {
 		tk := lexer.NextToken()
 
-		if tk.Type != testToken.expectedType {
-			t.Fatalf("tests [%d] - tokentype wrong. expected=%q but, got=%q",
-				i, testToken.expectedType, tk.Type)
-		}
-		if tk.Literal != testToken.expectedLiteral {
-			t.Fatalf("tests [%d] - literal wrong. expected=%q but, got=%q",
-				i, testToken.expectedLiteral, tk.Literal)
-		}
+		assert.Equalf(t, testToken.expectedType, tk.Type,
+			"tests [%d] - tokentype wrong. expected=%q but, got=%q", i, testToken.expectedType, tk.Type)
+
+		assert.Equalf(t, testToken.expectedLiteral, tk.Literal,
+			"tests [%d] - literal wrong. expected=%q but, got=%q", i, testToken.expectedLiteral, tk.Literal)
 	}
 }
 
 func Test_두문자토큰테스트(t *testing.T) {
+	//given
 	input := `10 == 10;
 	10 != 9;
 	`
@@ -192,18 +192,17 @@ func Test_두문자토큰테스트(t *testing.T) {
 		{token.EOF, ""},
 	}
 
+	//when
 	lexer := NewLexer(input)
 
+	//then
 	for i, testToken := range tests {
 		tk := lexer.NextToken()
 
-		if tk.Type != testToken.expectedType {
-			t.Fatalf("tests [%d] - tokentype wrong. expected=%q but, got=%q",
-				i, testToken.expectedType, tk.Type)
-		}
-		if tk.Literal != testToken.expectedLiteral {
-			t.Fatalf("tests [%d] - literal wrong. expected=%q but, got=%q",
-				i, testToken.expectedLiteral, tk.Literal)
-		}
+		assert.Equalf(t, testToken.expectedType, tk.Type,
+			"tests [%d] - tokentype wrong. expected=%q but, got=%q", i, testToken.expectedType, tk.Type)
+
+		assert.Equalf(t, testToken.expectedLiteral, tk.Literal,
+			"tests [%d] - literal wrong. expected=%q but, got=%q", i, testToken.expectedLiteral, tk.Literal)
 	}
 }
