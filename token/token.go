@@ -7,6 +7,10 @@ type Token struct {
 	Literal string
 }
 
+func New(tokenType TokenType, ch string) *Token {
+	return &Token{Type: tokenType, Literal: ch}
+}
+
 const (
 	ILLEGAL = "ILLEGAL"
 	EOF     = "EOF"
@@ -16,8 +20,17 @@ const (
 	INT   = "INT"   //123456
 
 	//연산자
-	ASSIGN = "="
-	PLUS   = "+"
+	ASSIGN   = "="
+	PLUS     = "+"
+	MINUS    = "-"
+	BANG     = "!"
+	ASTERISK = "*"
+	SLASH    = "/"
+	EQ       = "=="
+	NOT_EQ   = "!="
+
+	LT = "<"
+	GT = ">"
 
 	//구분자
 	COMMA     = ","
@@ -31,12 +44,22 @@ const (
 	//예약어
 	FUNCTION = "FUNCTION"
 	LET      = "LET"
+	IF       = "IF"
+	ELSE     = "ELSE"
+	RETURN   = "RETURN"
+	TRUE     = "TRUE"
+	FALSE    = "FALSE"
 )
 
 //예약 키워드
 var keywords = map[string]TokenType{
 	"function": FUNCTION,
 	"let":      LET,
+	"if":       IF,
+	"else":     ELSE,
+	"return":   RETURN,
+	"true":     TRUE,
+	"false":    FALSE,
 }
 
 func LookupIdent(ident string) TokenType {
