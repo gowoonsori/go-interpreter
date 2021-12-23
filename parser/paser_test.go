@@ -97,6 +97,30 @@ func Test_expression구문테스트(t *testing.T) {
 
 }
 
+func Test_Identifeir_표현식_테스트(t *testing.T) {
+	//given
+	input := "foobar;"
+
+	//when
+	l := lexer.NewLexer(input)
+	p := NewParser(l)
+	program := p.ParseProgram()
+
+	//then
+	checkParserErrors(t, p)
+
+	assert.Equalf(t, 1, len(program.Statements),
+		"program 의 구문이 1개가 아닙니다. got = %d ", len(program.Statements))
+
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	assert.Equalf(t, true, ok, "표현식이 아닙니다. got = %T", program.Statements[0])
+
+	ident, ok := stmt.Expression.(*ast.Identifier)
+	assert.Equalf(t, true, ok, "Identifier 이 아닙니다. got = %T", stmt.Expression)
+	assert.Equalf(t, "foobar", ident.Value, "ident의 값이 %s 가 아닙니다. got = %s", "foobar", ident.Value)
+	assert.Equalf(t, "foobar", ident.TokenLiteral(), "ident의 값이 %s 가 아닙니다. got = %s", "foobar", ident.TokenLiteral())
+}
+
 func checkParserErrors(t *testing.T, p *Parser) {
 	errors := p.Errors()
 	if len(errors) == 0 {

@@ -40,7 +40,7 @@ func (ls *LetStatement) toString() string {
 //ReturnStatement return 구문
 type ReturnStatement struct {
 	Token       token.Token //return
-	ReturnValue Expression
+	ReturnValue Expression  //반환값은 값일 수도 표현식일 수도 있다.
 }
 
 func (rs *ReturnStatement) statementNode() {}
@@ -65,7 +65,7 @@ func (rs *ReturnStatement) toString() string {
 //let과 return구문을 제외한 모든 구문
 type ExpressionStatement struct {
 	Token      token.Token //표현식의 첫번째 토큰
-	Expression Expression
+	Expression Expression  //표현식
 }
 
 func (es *ExpressionStatement) statementNode() {}
