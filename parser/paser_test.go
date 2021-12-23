@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func Test_let구문테스트(t *testing.T) {
+func Test_Let_statement(t *testing.T) {
 	//given
 	input := `
 		let x = 5;
@@ -44,7 +44,7 @@ func Test_let구문테스트(t *testing.T) {
 	}
 }
 
-func Test_return구문테스트(t *testing.T) {
+func Test_Return_statement(t *testing.T) {
 	//given
 	input := `
 		return 5;
@@ -68,7 +68,7 @@ func Test_return구문테스트(t *testing.T) {
 	}
 }
 
-func Test_expression구문테스트(t *testing.T) {
+func Test_Expression_구문테스트(t *testing.T) {
 	//given
 	input := `
 		return 5;
@@ -97,7 +97,7 @@ func Test_expression구문테스트(t *testing.T) {
 
 }
 
-func Test_Identifeir_표현식_테스트(t *testing.T) {
+func Test_Identifier_표현식_테스트(t *testing.T) {
 	//given
 	input := "foobar;"
 
@@ -119,6 +119,29 @@ func Test_Identifeir_표현식_테스트(t *testing.T) {
 	assert.Equalf(t, true, ok, "Identifier 이 아닙니다. got = %T", stmt.Expression)
 	assert.Equalf(t, "foobar", ident.Value, "ident의 값이 %s 가 아닙니다. got = %s", "foobar", ident.Value)
 	assert.Equalf(t, "foobar", ident.TokenLiteral(), "ident의 값이 %s 가 아닙니다. got = %s", "foobar", ident.TokenLiteral())
+}
+
+func Test_IntegerLiteral_표현식_테스트(t *testing.T) {
+	//given
+	input := "5;"
+	l := lexer.NewLexer(input)
+	p := NewParser(l)
+
+	//when
+	program := p.ParseProgram()
+
+	//then
+	checkParserErrors(t, p)
+	assert.Equalf(t, 1, len(program.Statements),
+		"program 의 구문이 1개가 아닙니다. got = %d ", len(program.Statements))
+
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	assert.Equalf(t, true, ok, "표현식이 아닙니다. got = %T", program.Statements[0])
+
+	ident, ok := stmt.Expression.(*ast.IntegerLiteral)
+	assert.Equalf(t, true, ok, "IntegerLiteral 이 아닙니다. got = %T", stmt.Expression)
+	assert.Equalf(t, int64(5), ident.Value, "ident의 값이 %d 가 아닙니다. got = %d", 5, ident.Value)
+	assert.Equalf(t, "5", ident.TokenLiteral(), "ident의 값이 %s 가 아닙니다. got = %s", "5", ident.TokenLiteral())
 }
 
 func checkParserErrors(t *testing.T, p *Parser) {
