@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"monkey/ast"
 	"monkey/lexer"
@@ -142,6 +143,46 @@ func Test_IntegerLiteral_표현식_테스트(t *testing.T) {
 	assert.Equalf(t, true, ok, "IntegerLiteral 이 아닙니다. got = %T", stmt.Expression)
 	assert.Equalf(t, int64(5), ident.Value, "ident의 값이 %d 가 아닙니다. got = %d", 5, ident.Value)
 	assert.Equalf(t, "5", ident.TokenLiteral(), "ident의 값이 %s 가 아닙니다. got = %s", "5", ident.TokenLiteral())
+}
+
+func Test_PrefixOperater_Expresstion(t *testing.T) {
+	//given
+	prefixTests := []struct {
+		input        string
+		operator     string
+		integerValue int64
+	}{
+		{"!5;", "!", 5},
+		{"-15;", "-", 15},
+	}
+
+	//when
+	for _, tt := range prefixTests {
+		l := lexer.NewLexer(tt.input)
+		p := NewParser(l)
+		program := p.ParseProgram()
+
+		//then
+		checkParserErrors(t, p)
+
+		assert.Equalf(t, 1, len(program.Statements), "statement가 1개가 아닙니다. got = %d", len(program.Statements))
+
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		assert.Equalf(t, true, ok, "표현식이 아닙니다. got = %T", program.Statements[0])
+
+		exp, ok := stmt.Expression.(*ast.PrefixExpression)
+		assert.Equalf(t, true, ok, "전위 표현식이 아닙니다. got = %T", stmt.Expression)
+		assert.Equalf(t, tt.operator, exp.Operator, "표현식의 전위 연산자가 %s가 아닙니다. got = %s", tt.operator, exp.Operator)
+		testIntegerLiteral(t, exp.Right, tt.integerValue)
+	}
+}
+
+func testIntegerLiteral(t *testing.T, il ast.Expression, expectedValue int64) {
+	integ, ok := il.(*ast.IntegerLiteral)
+	assert.Equalf(t, true, ok, "정수 리터럴이 아닙니다. got = %T", il)
+	assert.Equalf(t, expectedValue, integ.Value, "정수 값이 %d와 다릅니다. got = %d", expectedValue, integ.Value)
+	assert.Equalf(t, fmt.Sprintf("%d", expectedValue), integ.TokenLiteral(),
+		"토큰 리터럴이 %d와 다릅니다. got = %s", expectedValue, integ.TokenLiteral())
 }
 
 func checkParserErrors(t *testing.T, p *Parser) {
