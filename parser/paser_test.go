@@ -145,7 +145,7 @@ func Test_IntegerLiteral_표현식_테스트(t *testing.T) {
 	assert.Equalf(t, "5", ident.TokenLiteral(), "ident의 값이 %s 가 아닙니다. got = %s", "5", ident.TokenLiteral())
 }
 
-func Test_PrefixOperater_Expresstion(t *testing.T) {
+func Test_PrefixOperater_Expression(t *testing.T) {
 	//given
 	prefixTests := []struct {
 		input        string
@@ -174,6 +174,81 @@ func Test_PrefixOperater_Expresstion(t *testing.T) {
 		assert.Equalf(t, true, ok, "전위 표현식이 아닙니다. got = %T", stmt.Expression)
 		assert.Equalf(t, tt.operator, exp.Operator, "표현식의 전위 연산자가 %s가 아닙니다. got = %s", tt.operator, exp.Operator)
 		testIntegerLiteral(t, exp.Right, tt.integerValue)
+	}
+}
+
+func Test_InfixOperator_Expression(t *testing.T) {
+	//given
+	infixTests := []struct {
+		input      string
+		leftValue  int64
+		operator   string
+		rightValue int64
+	}{
+		{"5 + 5;", 5, "+", 5},
+		{"5 - 5;", 5, "-", 5},
+		{"5 > 5;", 5, ">", 5},
+		{"5 * 5;", 5, "*", 5},
+		{"5 < 5;", 5, "<", 5},
+		{"5 == 5;", 5, "==", 5},
+		{"5 != 5;", 5, "!=", 5},
+		{"5 / 5;", 5, "/", 5},
+	}
+
+	//when
+	for _, tt := range infixTests {
+		l := lexer.NewLexer(tt.input)
+		p := NewParser(l)
+		program := p.ParseProgram()
+
+		//then
+		checkParserErrors(t, p)
+
+		assert.Equalf(t, 1, len(program.Statements), "statement가 1개가 아닙니다. got = %d", len(program.Statements))
+
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		assert.Equalf(t, true, ok, "statement가 표현식이 아닙니다. got = %T", program.Statements[0])
+
+		exp, ok := stmt.Expression.(*ast.InfixExpression)
+		assert.Equalf(t, true, ok, "중위 표현식이 아닙니다. got = %T", stmt.Expression)
+
+		testIntegerLiteral(t, exp.Left, tt.leftValue)
+		assert.Equalf(t, tt.operator, exp.Operator, "연산자가 %s와 다릅니다. got = %s", tt.operator, exp.Operator)
+		testIntegerLiteral(t, exp.Right, tt.rightValue)
+	}
+}
+
+func Test_OperatorPrecedence(t *testing.T) {
+	//given
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{"-a * b", "((-a) * b)"},
+		{"!-a", "(!(-a))"},
+		{"a + b + c", "((a + b) + c)"},
+		{"a + b - c", "((a + b) - c)"},
+		{"a * b * c", "((a * b) * c)"},
+		{"a * b / c", "((a * b) / c)"},
+		{"a + b / c", "(a + (b / c))"},
+		{"a+b*c+d/e-f", "(((a + (b * c)) + (d / e)) - f)"},
+		{"3 + 4; -5* 5", "(3 + 4)((-5) * 5)"},
+		{"5 >4 == 3 >4", "((5 > 4) == (3 > 4))"},
+		{"5 < 4 != 3>4", "((5 < 4) != (3 > 4))"},
+		{"3 + 4*5 == 3 * 1 + 4 * 5", "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))"},
+	}
+
+	//when
+	for _, tt := range tests {
+		l := lexer.NewLexer(tt.input)
+		p := NewParser(l)
+		program := p.ParseProgram()
+
+		//then
+		checkParserErrors(t, p)
+
+		actual := program.ToString()
+		assert.Equalf(t, tt.expected, actual, "expected = %q, got = %q", tt.expected, actual)
 	}
 }
 

@@ -23,14 +23,14 @@ func (ls *LetStatement) TokenLiteral() string {
 	return ls.Token.Literal
 }
 
-func (ls *LetStatement) toString() string {
+func (ls *LetStatement) ToString() string {
 	var out bytes.Buffer
 
 	out.WriteString(ls.TokenLiteral() + " ")
-	out.WriteString(ls.Name.toString())
+	out.WriteString(ls.Name.ToString())
 	out.WriteString(" = ")
 	if ls.Value != nil {
-		out.WriteString(ls.Value.toString())
+		out.WriteString(ls.Value.ToString())
 	}
 	out.WriteString(";")
 
@@ -49,12 +49,12 @@ func (rs *ReturnStatement) TokenLiteral() string {
 	return rs.Token.Literal
 }
 
-func (rs *ReturnStatement) toString() string {
+func (rs *ReturnStatement) ToString() string {
 	var out bytes.Buffer
 
 	out.WriteString(rs.TokenLiteral() + " ")
 	if rs.ReturnValue != nil {
-		out.WriteString(rs.ReturnValue.toString())
+		out.WriteString(rs.ReturnValue.ToString())
 	}
 	out.WriteString(";")
 
@@ -74,9 +74,9 @@ func (es *ExpressionStatement) TokenLiteral() string {
 	return es.Token.Literal
 }
 
-func (es *ExpressionStatement) toString() string {
+func (es *ExpressionStatement) ToString() string {
 	if es.Expression != nil {
-		return es.Expression.toString()
+		return es.Expression.ToString()
 	}
 	return ""
 }

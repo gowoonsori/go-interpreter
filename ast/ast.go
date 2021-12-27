@@ -6,7 +6,7 @@ import "bytes"
 //let <identifer> = <expresiion>;
 type Node interface {
 	TokenLiteral() string
-	toString() string
+	ToString() string
 }
 
 //Program AST의 부모 노드
@@ -22,11 +22,11 @@ func (p *Program) TokenLiteral() string {
 	}
 }
 
-func (p *Program) toString() string {
+func (p *Program) ToString() string {
 	var out bytes.Buffer
 
 	for _, s := range p.Statements {
-		out.WriteString(s.toString())
+		out.WriteString(s.ToString())
 	}
 	return out.String()
 }

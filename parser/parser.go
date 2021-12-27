@@ -8,6 +8,7 @@ import (
 	"strconv"
 )
 
+//연산자 우선순위
 const (
 	_ int = iota
 	LOWEST
@@ -19,9 +20,21 @@ const (
 	CALL         // mfunction(x)
 )
 
+var precedences = map[token.TokenType]int{
+	token.EQ:       EQUALS,
+	token.NOT_EQ:   EQUALS,
+	token.LT:       LESS_GREATER,
+	token.GT:       LESS_GREATER,
+	token.PLUS:     SUM,
+	token.MINUS:    SUM,
+	token.SLASH:    PRODUCT,
+	token.ASTERISK: PRODUCT,
+}
+
+//연산자 파싱 함수
 type (
-	prefixParseFn func() ast.Expression
-	infixParseFn  func() ast.Expression
+	prefixParseFn func() ast.Expression                    //전위연산자 파싱함수들
+	infixParseFn  func(left ast.Expression) ast.Expression //중위연산자 파싱함수들
 )
 
 type Parser struct {
@@ -45,6 +58,16 @@ func NewParser(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.INT, p.parseIntegerLiteral)
 	p.registerPrefix(token.BANG, p.parsePrefixExpression)
 	p.registerPrefix(token.MINUS, p.parsePrefixExpression)
+
+	p.infixParseFns = make(map[token.TokenType]infixParseFn)
+	p.registerInfix(token.PLUS, p.parseInfixExpression)
+	p.registerInfix(token.MINUS, p.parseInfixExpression)
+	p.registerInfix(token.SLASH, p.parseInfixExpression)
+	p.registerInfix(token.ASTERISK, p.parseInfixExpression)
+	p.registerInfix(token.EQ, p.parseInfixExpression)
+	p.registerInfix(token.NOT_EQ, p.parseInfixExpression)
+	p.registerInfix(token.LT, p.parseInfixExpression)
+	p.registerInfix(token.GT, p.parseInfixExpression)
 
 	p.nextToken()
 	p.nextToken()
@@ -158,13 +181,17 @@ func (p *Parser) parseReturnStatement() ast.Statement {
 	return stmt
 }
 
+//전위연산자를 위한 파싱함수 등록메서드
 func (p *Parser) registerPrefix(tokenType token.TokenType, fn prefixParseFn) {
 	p.prefixParseFns[tokenType] = fn
 }
+
+//중위연산자를 위한 파싱함수 등록메서드
 func (p *Parser) registerInfix(tokenType token.TokenType, fn infixParseFn) {
 	p.infixParseFns[tokenType] = fn
 }
 
+//표현식 파싱 메서드
 func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 	stmt := &ast.ExpressionStatement{Token: p.curToken}
 	stmt.Expression = p.parseExpression(LOWEST)
@@ -176,7 +203,7 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 	return stmt
 }
 
-func (p *Parser) noPrefixParserFnerror(t token.TokenType) {
+func (p *Parser) noPrefixParserFnError(t token.TokenType) {
 	msg := fmt.Sprintf("%s 토큰을 위한 prefix parse 함수를 찾을 수 없습니다. ", t)
 	p.errors = append(p.errors, msg)
 }
@@ -184,10 +211,21 @@ func (p *Parser) noPrefixParserFnerror(t token.TokenType) {
 func (p *Parser) parseExpression(precedence int) ast.Expression {
 	prefix := p.prefixParseFns[p.curToken.Type]
 	if prefix == nil {
-		p.noPrefixParserFnerror(p.curToken.Type)
+		p.noPrefixParserFnError(p.curToken.Type)
 		return nil
 	}
+
 	leftExp := prefix()
+	for !p.peekTokenIs(token.SEMICOLON) && precedence < p.peekPrecedence() {
+		infix := p.infixParseFns[p.peekToken.Type]
+		if infix == nil {
+			return leftExp
+		}
+
+		p.nextToken()
+
+		leftExp = infix(leftExp)
+	}
 
 	return leftExp
 }
@@ -217,6 +255,34 @@ func (p *Parser) parsePrefixExpression() ast.Expression {
 	}
 	p.nextToken()
 	expression.Right = p.parseExpression(PREFIX)
+
+	return expression
+}
+
+func (p *Parser) peekPrecedence() int {
+	if p, ok := precedences[p.peekToken.Type]; ok {
+		return p
+	}
+	return LOWEST
+}
+
+func (p *Parser) curPrecedence() int {
+	if p, ok := precedences[p.curToken.Type]; ok {
+		return p
+	}
+	return LOWEST
+}
+
+func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
+	expression := &ast.InfixExpression{
+		Token:    p.curToken,
+		Operator: p.curToken.Literal,
+		Left:     left,
+	}
+
+	precedence := p.curPrecedence()
+	p.nextToken()
+	expression.Right = p.parseExpression(precedence)
 
 	return expression
 }

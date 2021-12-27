@@ -26,7 +26,7 @@ func Test_toString테스트(t *testing.T) {
 	}
 
 	//when
-	result := program.toString()
+	result := program.ToString()
 
 	//Then
 	assert.Equal(t, expectedInput, result,
