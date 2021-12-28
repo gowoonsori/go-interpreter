@@ -1,6 +1,8 @@
 package ast
 
-import "bytes"
+import (
+	"bytes"
+)
 
 // Node
 //let <identifer> = <expresiion>;

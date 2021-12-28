@@ -236,6 +236,8 @@ func Test_OperatorPrecedence(t *testing.T) {
 		{"5 >4 == 3 >4", "((5 > 4) == (3 > 4))"},
 		{"5 < 4 != 3>4", "((5 < 4) != (3 > 4))"},
 		{"3 + 4*5 == 3 * 1 + 4 * 5", "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))"},
+		{"3>6 == false", "((3 > 6) == false)"},
+		{"3 < 5 == true", "((3 < 5) == true)"},
 	}
 
 	//when
@@ -250,6 +252,35 @@ func Test_OperatorPrecedence(t *testing.T) {
 		actual := program.ToString()
 		assert.Equalf(t, tt.expected, actual, "expected = %q, got = %q", tt.expected, actual)
 	}
+}
+
+func Test_Bool_Literal(t *testing.T) {
+	//given
+	inputT := "true"
+	inputF := "false"
+
+	//when
+	tL := lexer.NewLexer(inputT)
+	tP := NewParser(tL)
+	pT := tP.ParseProgram()
+	fL := lexer.NewLexer(inputF)
+	fP := NewParser(fL)
+	pF := fP.ParseProgram()
+
+	//then
+	tV := pT.Statements[0].(*ast.ExpressionStatement).Expression.(*ast.Boolean)
+	testBooleanLiteral(t, tV, true)
+	fV := pF.Statements[0].(*ast.ExpressionStatement).Expression.(*ast.Boolean)
+	testBooleanLiteral(t, fV, false)
+
+}
+
+func testBooleanLiteral(t *testing.T, bl ast.Expression, expectedValue bool) {
+	bo, ok := bl.(*ast.Boolean)
+	assert.Equalf(t, true, ok, "Bool 리터럴이 아닙니다. got = %T", bl)
+	assert.Equalf(t, expectedValue, bo.Value, "Bool 값이 %t와 다릅니다. got = %t", expectedValue, bo.Value)
+	assert.Equalf(t, fmt.Sprintf("%t", expectedValue), bo.TokenLiteral(),
+		"토큰 리터럴이 %t와 다릅니다. got = %s", expectedValue, bo.TokenLiteral())
 }
 
 func testIntegerLiteral(t *testing.T, il ast.Expression, expectedValue int64) {
