@@ -254,6 +254,33 @@ func Test_OperatorPrecedence(t *testing.T) {
 	}
 }
 
+func Test_Operator_Precedence_Parsing(t *testing.T) {
+	//given
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{"1+(2+3)+4", "((1 + (2 + 3)) + 4)"},
+		{"(5 + 5) * 2", "((5 + 5) * 2)"},
+		{"2/(5+5)", "(2 / (5 + 5))"},
+		{"-(5 + 5)", "(-(5 + 5))"},
+		{"!(true == true)", "(!(true == true))"},
+	}
+
+	//when
+	for _, tt := range tests {
+		l := lexer.NewLexer(tt.input)
+		p := NewParser(l)
+		program := p.ParseProgram()
+
+		//then
+		checkParserErrors(t, p)
+
+		actual := program.ToString()
+		assert.Equalf(t, tt.expected, actual, "expected = %q, got = %q", tt.expected, actual)
+	}
+}
+
 func Test_Bool_Literal(t *testing.T) {
 	//given
 	inputT := "true"
